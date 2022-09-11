@@ -1,7 +1,8 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindManyOptions, Repository } from 'typeorm';
 import { CreateTagDTO } from './dto/create-tag.dto';
+import { FindAllTagDTO } from './dto/findAll-tag.dto';
 import { UpdateTagDTO } from './dto/update-tag.dto';
 import { Tag } from './entities/tag.entity';
 
@@ -30,6 +31,10 @@ export class TagService {
     });
   }
 
+  async getCount() {
+    return this.tagRepository.count();
+  }
+
   async findOne(id: number) {
     return this.tagRepository.findOne({
       where: { id },
@@ -46,6 +51,35 @@ export class TagService {
         creator: true,
       },
     });
+  }
+
+  async findAll(findAllTagDto: FindAllTagDTO) {
+    // default query options
+    const options: FindManyOptions<Tag> = {
+      select: {
+        id: true,
+        name: true,
+        sortOrder: true,
+        creator: {
+          nickname: true,
+          uid: true,
+        },
+      },
+      relations: {
+        creator: true,
+      },
+      skip: findAllTagDto.offset,
+      take: findAllTagDto.length,
+      order:
+        findAllTagDto.sortByName || findAllTagDto.sortByOrder
+          ? {}
+          : { id: 'asc' },
+    };
+
+    if (findAllTagDto.sortByName) options.order.name = 'asc';
+    if (findAllTagDto.sortByOrder) options.order.sortOrder = 'asc';
+
+    return this.tagRepository.find(options);
   }
 
   async update(tagId: number, updateTagDto: UpdateTagDTO) {

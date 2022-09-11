@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Put } from '@nestjs/common';
+import {
+  Get,
+  Put,
+  Body,
+  Post,
+  Param,
+  Delete,
+  Controller,
+} from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtPayloadDTO } from 'src/auth/dto/jwt.payload.dto';
 import { RequestUser } from 'src/common/decorators/user.request.decorator';
@@ -6,6 +14,9 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUserDTO } from './dto/create-user.output.dto';
 import { UserService } from './user.service';
 import { UpdateUserOutputDTO } from './dto/update-user.output.dto';
+import { BindTagDTO } from './dto/bind-tag.dto';
+import { BindTagOutputDTO } from './dto/bind-tag.output.dto';
+import { IdParamInputDTO } from 'src/common/dto/id.param.input.dto';
 
 @Controller('user')
 export class UserController {
@@ -36,5 +47,29 @@ export class UserController {
   async delete(@RequestUser() jwtPayload: JwtPayloadDTO) {
     await this.userService.deleteById(jwtPayload.userId);
     await this.authService.revokeToken(jwtPayload.tokenId);
+  }
+
+  @Post('tag')
+  async bindTag(
+    @RequestUser() jwtPayload: JwtPayloadDTO,
+    @Body() bindTagDto: BindTagDTO,
+  ) {
+    const tags = await this.userService.bindTag(jwtPayload.userId, bindTagDto);
+    return tags.map((tag) => new BindTagOutputDTO(tag));
+  }
+
+  @Delete('tag/:id')
+  async unbindTag(
+    @RequestUser() jwtPayload: JwtPayloadDTO,
+    @Param() param: IdParamInputDTO,
+  ) {
+    // TODO: DTO
+    return this.userService.unbindTag(jwtPayload.userId, param.id);
+  }
+
+  @Get('tag/my')
+  async createdTags(@RequestUser() jwtPayload: JwtPayloadDTO) {
+    // TODO: DTO
+    return this.userService.getCreatedTag(jwtPayload.userId);
   }
 }

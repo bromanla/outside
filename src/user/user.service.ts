@@ -1,16 +1,20 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { hash } from 'bcryptjs';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
+import { BindTagDTO } from './dto/bind-tag.dto';
+import { Tag } from 'src/tag/entities/tag.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    @InjectRepository(Tag)
+    private readonly tagRepository: Repository<Tag>,
   ) {}
 
   // private function for password hashing
@@ -85,5 +89,73 @@ export class UserService {
 
   async deleteById(uid: string) {
     await this.usersRepository.delete({ uid });
+  }
+
+  async bindTag(uid: string, bindTagDto: BindTagDTO) {
+    // fetch in one query
+    const tags = await this.tagRepository.find({
+      where: {
+        id: In(bindTagDto.tags),
+      },
+      select: {
+        id: true,
+        name: true,
+        sortOrder: true,
+      },
+    });
+
+    // if the length of the arrays does not match
+    // it means that a non-existent id was entered
+    if (tags.length !== bindTagDto.tags.length) {
+      // search for it
+      const tagsId = tags.map((tag) => tag.id);
+      const errTagsId = bindTagDto.tags.filter((id) => !tagsId.includes(id));
+      const message = `unavailable tag${
+        errTagsId.length === 1 ? '' : 's'
+      }: ${errTagsId.join(', ')}`;
+
+      throw new BadRequestException(message);
+    }
+
+    const user = await this.usersRepository.findOne({
+      where: { uid },
+      relations: {
+        tags: true,
+      },
+    });
+
+    // now we are overwriting all tags
+    // not optimal, but can be corrected through filters
+    user.tags = [...user.tags, ...tags];
+    await this.usersRepository.save(user);
+
+    return tags;
+  }
+
+  async unbindTag(userId, tagId) {
+    const user = await this.usersRepository.findOne({
+      where: { uid: userId },
+      relations: {
+        tags: true,
+      },
+    });
+
+    user.tags = user.tags.filter((tag) => tag.id != tagId);
+    await this.usersRepository.save(user);
+
+    return user.tags;
+  }
+
+  async getCreatedTag(userId) {
+    return this.tagRepository.find({
+      where: {
+        creatorId: userId,
+      },
+      select: {
+        id: true,
+        name: true,
+        sortOrder: true,
+      },
+    });
   }
 }

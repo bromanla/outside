@@ -4,15 +4,20 @@ import {
   Body,
   Post,
   Param,
+  Query,
   Delete,
   Controller,
   ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtPayloadDTO } from 'src/auth/dto/jwt.payload.dto';
 import { RequestUser } from 'src/common/decorators/user.request.decorator';
 import { IdParamInputDTO } from 'src/common/dto/id.param.input.dto';
 import { CreateTagDTO } from './dto/create-tag.dto';
 import { CreateTagOutputDTO } from './dto/create-tag.output.dto';
+import { FindAllTagDTO } from './dto/findAll-tag.dto';
+import { FindAllTagOutputDTO } from './dto/findAll-tag.output.dto';
+import { FindTagOutputDTO } from './dto/findTag.output.dto';
 import { UpdateTagDTO } from './dto/update-tag.dto';
 import { UpdateTagOutdutDTO } from './dto/update-tag.output.dto';
 import { TagService } from './tag.service';
@@ -30,9 +35,24 @@ export class TagController {
     return new CreateTagOutputDTO(tag);
   }
 
+  @Get()
+  async findAll(@Query() findAllTagDto: FindAllTagDTO) {
+    const quantity = await this.tagService.getCount();
+    const tags = await this.tagService.findAll(findAllTagDto);
+
+    return new FindAllTagOutputDTO(
+      tags.map((tag) => new FindTagOutputDTO(tag)),
+      findAllTagDto,
+      quantity,
+    );
+  }
+
   @Get(':id')
   async findOne(@Param() param: IdParamInputDTO) {
-    return this.tagService.findOne(param.id);
+    const tag = await this.tagService.findOne(param.id);
+    if (!tag) throw new NotFoundException();
+
+    return new FindTagOutputDTO(tag);
   }
 
   @Put(':id')

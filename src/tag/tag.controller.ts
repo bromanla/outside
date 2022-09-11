@@ -9,7 +9,10 @@ import {
   Controller,
   ForbiddenException,
   NotFoundException,
+  UseInterceptors,
+  CacheInterceptor,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { JwtPayloadDTO } from 'src/auth/dto/jwt.payload.dto';
 import { RequestUser } from 'src/common/decorators/user.request.decorator';
 import { IdParamInputDTO } from 'src/common/dto/id.param.input.dto';
@@ -22,6 +25,7 @@ import { UpdateTagDTO } from './dto/update-tag.dto';
 import { UpdateTagOutdutDTO } from './dto/update-tag.output.dto';
 import { TagService } from './tag.service';
 
+@ApiTags('tag')
 @Controller('tag')
 export class TagController {
   constructor(private readonly tagService: TagService) {}
@@ -36,6 +40,7 @@ export class TagController {
   }
 
   @Get()
+  @UseInterceptors(CacheInterceptor)
   async findAll(@Query() findAllTagDto: FindAllTagDTO) {
     const quantity = await this.tagService.getCount();
     const tags = await this.tagService.findAll(findAllTagDto);
@@ -48,6 +53,7 @@ export class TagController {
   }
 
   @Get(':id')
+  @UseInterceptors(CacheInterceptor)
   async findOne(@Param() param: IdParamInputDTO) {
     const tag = await this.tagService.findOne(param.id);
     if (!tag) throw new NotFoundException();

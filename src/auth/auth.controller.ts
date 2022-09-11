@@ -13,7 +13,9 @@ import { JwtPayloadDTO } from './dto/jwt.payload.dto';
 import { Public } from 'src/common/decorators/public.decorator';
 import { CreateUserDTO } from 'src/user/dto/create-user.dto';
 import { TokenOutputDTO } from './dto/token.output.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller()
 export class AuthController {
   expire: number;

@@ -146,10 +146,10 @@ export class UserService {
     return user.tags;
   }
 
-  async getCreatedTag(userId) {
+  async getCreatedTag(userUid) {
     return this.tagRepository.find({
       where: {
-        creatorId: userId,
+        creatorUid: userUid,
       },
       select: {
         id: true,

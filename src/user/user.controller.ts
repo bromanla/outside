@@ -58,18 +58,18 @@ export class UserController {
     return tags.map((tag) => new BindTagOutputDTO(tag));
   }
 
+  // TODO: DTO
   @Delete('tag/:id')
   async unbindTag(
     @RequestUser() jwtPayload: JwtPayloadDTO,
     @Param() param: IdParamInputDTO,
   ) {
-    // TODO: DTO
     return this.userService.unbindTag(jwtPayload.userId, param.id);
   }
 
+  // TODO: DTO
   @Get('tag/my')
   async createdTags(@RequestUser() jwtPayload: JwtPayloadDTO) {
-    // TODO: DTO
     return this.userService.getCreatedTag(jwtPayload.userId);
   }
 }

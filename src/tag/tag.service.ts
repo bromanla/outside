@@ -13,15 +13,15 @@ export class TagService {
     private readonly tagRepository: Repository<Tag>,
   ) {}
 
-  async checkTagCreator(creatorId, tagId) {
+  async checkTagCreator(creatorUid, tagId) {
     const tag = await this.tagRepository.findOne({ where: { id: tagId } });
-    return tag && tag.creatorId === creatorId;
+    return tag && tag.creatorUid === creatorUid;
   }
 
-  async create(creatorId: string, createTagDto: CreateTagDTO) {
+  async create(creatorUid: string, createTagDto: CreateTagDTO) {
     const tag = this.tagRepository.create({
       ...createTagDto,
-      creatorId,
+      creatorUid,
     });
 
     return this.tagRepository.save(tag).catch((err) => {

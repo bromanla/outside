@@ -15,7 +15,7 @@ export class Tag {
   id: number;
 
   @Column()
-  creatorId: string;
+  creatorUid: string;
 
   @JoinColumn()
   @ManyToOne(() => User, (user) => user.createdTags, { onDelete: 'CASCADE' })
